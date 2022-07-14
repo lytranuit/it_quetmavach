@@ -1,0 +1,295 @@
+﻿@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Views/Shared/_Admin.cshtml";
+}
+
+<div class="row justify-content-md-center">
+    <div class="col-6">
+        <section class="card">
+            <div class="card-body">
+                <input type="text" class="form-control" id="sohd" placeholder="Số hóa đơn" autofocus />
+            </div>
+        </section>
+    </div>
+</div>
+<div class="row d-none hoadon">
+    <div class="col-12">
+        <section class="card">
+            <div class="card-body hoadon-check d-none">
+                <div class="row mt-2">
+                    <div class="col-4">
+
+                        <b>Số hóa đơn:</b>
+                        <span class="sohd"></span>
+                    </div>
+                    <div class="col-4">
+                        <b>Kí hiệu:</b>
+                        <span class="kihieu"></span>
+                    </div>
+                </div>
+                  <div class="row mt-2">
+                    <div class="col-4">
+                        <b>Đơn vị mua hàng:</b>
+                        <span class="donvi"></span>
+                    </div>
+                    <div class="col-4">
+                        <b>Địa chỉ:</b>
+                        <span class="diachi"></span>
+                    </div> 
+                    <div class="col-4">
+                        <b>Ngày giao hàng:</b>
+                        <span class="ngaygiaohang"></span>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <b>Chi tiết đơn hàng:</b>
+                    </div>
+                </div>
+                <div class="mt-2 row">
+                    <div class="col-12">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Mã hàng hóa</th>
+                                    <th>Tên hàng hóa</th>
+                                    <th>Số lượng</th>
+                                    <th>Đơn vị tính</th>
+                                    <th>Đơn giá</th>
+                                    <th>Thành tiền</th>
+                                    <th style="padding:5px;width: 250px;"><input style='' type="text" class="form-control form-control-sm d-none" id="mavach" placeholder="Nhập mã vạch kiểm tra đơn hàng" /></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="chitietdonhang">
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-dark text-white">
+                                    <th colspan="4" class="border-0"></th>
+                                    <td class="border-0 font-14"><b>Tổng tiền</b></td>
+                                    <td class="border-0 font-14"><b class="thanhtien_hd"></b></td>
+                                    <td colspan="2" class="border-0"><h5 class="bg-secondary m-0 p-2 text-white text-center d-none check"><i class="fas fa-check mr-2"></i> Đã kiểm tra xong</h5></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body hoadon-empty">
+                <div class="mt-2 text-center message">
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<template class="chitiet_template">
+    <tr data-id={{maHH}}>
+        <td>{{maHH}}</td>
+        <td>{{tenHH}}</td>
+        <td>{{soLuong}}</td>
+        <td>{{dvt}}</td>
+        <td>{{donGia}}</td>
+        <td>{{thanhTien}}</td>>
+        <td style='width: 250px;'>
+            <div class="input-soluong">
+            </div>
+        </td>
+        <td>
+            <div class="status">
+                <i class="fas fa-ban text-danger"></i>
+            </div>
+        </td>
+    </tr>
+</template>
+@section Scripts{
+
+<link href="/assets/plugins/ion-rangeslider/ion.rangeSlider.css" rel="stylesheet" type="text/css" />
+<script src="/assets/plugins/ion-rangeslider/ion.rangeSlider.min.js"></script>
+<script type='text/javascript'>
+    var data_hoadon = null;
+
+    $(document).ready(function() {
+        var key = "";
+        var timer;
+        $(document).keypress(function(e) {
+            if (e.target.nodeName.toLowerCase() == 'input'){
+                return;
+            }
+            //console.log(e);
+            if(e.which == 10 || e.which == 13) {
+                $("#mavach").val(key);
+                key = "";
+                e.preventDefault();
+                loadproduct()
+            }else{
+                clearTimeout(timer);
+                timer = setTimeout(function(){
+                    key = "";
+                },500);
+                key += e.originalEvent.key;
+
+            }
+        });
+        $("#sohd").keypress(function(e) {
+            //e.preventDefault();
+            // Enter pressed?
+
+            if(e.which == 10 || e.which == 13) {
+                e.preventDefault();
+                loadhoadon()
+            }
+
+        });
+        //$("#mavach").keypress(function(e) {
+        //    if(e.which == 10 || e.which == 13) {
+        //        e.preventDefault();
+        //        loadproduct()
+        //    }
+        //});
+        $(document).on("change",'.input-soluong input',function(){
+            var tr = $(this).closest("tr");
+            var product_item = tr.data("item");
+            var max = product_item.soLuong;
+            var val = parseInt($(this).val());
+            if(val > max){
+                val = max;
+            }
+
+            $(".input-soluong input",tr).val(val);
+            check_tr(tr);
+        })
+        function loadhoadon(){
+            var sohd = $("#sohd").val();
+            const myArray = sohd.split(";");
+            sohd = myArray[0];
+            $(".preloader").fadeIn();
+            $.ajax({
+                url:"/admin/orderch/get",
+                data:{
+                    sohd:sohd
+                },
+                type:"GET",
+                dataType:"JSON",
+                success:function(data){
+                    $(".preloader").fadeOut();
+                    ////reset
+                    $(".check").addClass("d-none");
+                    $("#mavach").attr("disabled",false);
+                    $(".thanhtien_hd").empty();
+                    $(".hoadon-empty").addClass("d-none");
+                    $(".hoadon-check").addClass("d-none");
+                    $(".hoadon").removeClass("d-none");
+                    if(data.success){
+                        $(".hoadon-check").removeClass("d-none");
+                        $(".sohd").text(data.item.soHD);
+                        $(".kihieu").text(data.item.kihieu);
+                        $(".ngaygiaohang").text(moment(data.item.ngaygiaohang).format("DD/MM/YYYY"));
+                        $(".donvi").text(data.item.donvi);
+                        $(".diachi").text(data.item.diachi);
+                        $("#chitietdonhang").empty();
+                        $(".thanhtien_hd").html(number_format(data.item.thanhtien_hd,0,",",".") + " VND")
+                        for(var item of data.item.list_items){
+                            add_item(item);
+                        }
+                        //$("#mavach").focus();
+                        $("#sohd").blur();
+                        $("#sohd").attr("disabled",true)
+                        data_hoadon = data.item;
+                    }else{
+                        $(".message").text(data.message);
+                        $(".hoadon-empty").removeClass("d-none");
+                    }
+                }
+            })
+        }
+
+        function loadproduct(){
+            if($("#mavach").val() == '')
+                return;
+            var mavach = $("#mavach").val();
+            $("#mavach").val('');
+            var product_item = data_hoadon.list_items.find(element => element.product.mavach == mavach);
+            //console.log(product_item)
+            if(!product_item){
+                alert("Không có sản phẩm này trong hóa đơn");
+                return;
+            }
+            var maHH = product_item.maHH;
+            var tr =  $("tr[data-id='"+maHH+"']");
+            var input = $(".input-soluong input",tr);
+            var min = 0;
+            var max = product_item.soLuong;
+            var product = product_item.product;
+            var dvthop = product.sL3 && product.sL2 ? Math.round(product.sL3 / product.sL2) : 0;
+            var cur_val = 0;
+            if(!input.length){
+                $(".input-soluong",tr).append("<input type='number' min='"+min+"' max='"+max+"' class='form-control form-control-sm' value='"+dvthop+"'/>");
+                if(dvthop == 0){
+                     $(".input-soluong",tr).append('<div class="text-center"><span class="badge badge-soft-warning">Không có số lượng trên hộp</span></div>');
+                }
+            }else{
+                var cur_val = input.val();
+            }
+            var val = parseInt(cur_val) + parseInt(dvthop);
+            if(val > max){
+                val = max;
+                if(is_alert)
+                    alert("Đã đủ số lượng");
+            }
+            $(".input-soluong input",tr).val(val);
+            check_tr(tr);
+        }
+        function check_tr(tr){
+            var product_item = tr.data("item");
+            var max = parseInt(product_item.soLuong);
+            var sohd = data_hoadon.soHD;
+            //console.log(dvthop);
+            var input = $(".input-soluong input",tr);
+            var cur_val = parseInt(input.val());
+
+            if(cur_val >= max){
+                $(".status",tr).html("<i class='fas fa-check text-success'></i>");
+                input.attr("disabled",true);
+                tr.addClass("box-success");
+            }else{
+                $(".status",tr).html("<i class='fas fa-ban text-danger'></i>");
+            }
+            if($("#chitietdonhang tr").length == $("#chitietdonhang tr.box-success").length){
+                $(".check").removeClass("d-none");
+                $("#mavach").attr("disabled",true);
+                $.ajax({
+                    url:"/admin/orderch/successkt",
+                    data:{
+                        sohd:sohd
+                    },
+                    type:"POST",
+                    dataType:"JSON",
+                    success:function(data){
+                        if(data.success){
+                        }else{
+                            alert(data.message)
+                        }
+                    }
+                })
+            }
+        }
+        function add_item(item) {
+            item.soLuong = number_format(item.soLuong,0,",",".");
+            item.donGia = number_format(item.donGia,0,",",".") + " VND";
+            item.thanhTien = number_format(item.thanhTien,0,",",".") + " VND";
+            var template = $(".chitiet_template").html();
+            var rendered = Mustache.render(template, item);
+            $("#chitietdonhang").append(rendered);
+
+            $("tr[data-id='"+item.maHH+"'] .range_01").ionRangeSlider({
+                skin: "modern",
+                min: 0,
+                max:item.soLuong
+            });
+            $("tr[data-id='"+item.maHH+"']").data("item",item);
+        }
+
+    });
+</script>
+}

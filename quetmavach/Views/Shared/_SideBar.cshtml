@@ -1,0 +1,60 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using it
+@using it.Areas.Admin.Models
+@addTagHelper *, it
+@inject it.Data.ItContext _context
+@inject UserManager<UserModel> userManager;
+@{
+    var user = await userManager.GetUserAsync(User);
+    var is_admin = await userManager.IsInRoleAsync(user, "Administrator");
+    var MACH = user.MACH;
+    var donvi = _context.DonviModel.Where(d => d.MACH == MACH).FirstOrDefault();
+    var is_cuahang = false;
+    if (donvi != null && donvi.is_cuahang == true)
+        is_cuahang = true;
+}
+<div class="left-sidenav">
+    <ul class="metismenu left-sidenav-menu">
+        @if (is_cuahang == true)
+        {
+            <li>
+                <a href="/admin/orderch">
+                    <i class="ti-server"></i>
+                    <span>Kiểm tra đơn hàng</span>
+                </a>
+            </li>
+        }
+        else
+        {
+            <li>
+                <a href="/admin/order">
+                    <i class="ti-server"></i>
+                    <span>Kiểm tra đơn hàng</span>
+                </a>
+            </li>
+        }
+
+
+        <li>
+            <a href="/admin/product">
+                <i class="fas fa-tasks"></i>
+                <span>Danh mục hàng hóa</span>
+            </a>
+        </li>
+        @if (is_admin)
+        {
+            <li>
+                <a href="javascript: void(0);">
+                    <i class="ti-briefcase"></i>
+                    <span>Hệ thống</span>
+                    <span class="menu-arrow"><i class="mdi mdi-chevron-right"></i></span>
+                </a>
+
+                <ul class="nav-second-level" aria-expanded="false">
+                    <li class="nav-item"><a class="nav-link" href="/admin/user"><i class="ti-control-record"></i>Tài khoản</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/role"><i class="ti-control-record"></i>Quyền</a></li>
+                </ul>
+            </li>
+        }
+    </ul>
+</div>

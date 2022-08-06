@@ -3,6 +3,7 @@ using it.Data;
 using System.Collections;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
+using Spire.Xls;
 
 namespace it.Areas.Admin.Controllers
 {
@@ -95,6 +96,52 @@ namespace it.Areas.Admin.Controllers
             }
             var jsonData = new { draw = draw, recordsFiltered = recordsFiltered, recordsTotal = recordsTotal, data = data };
             return Json(jsonData);
+        }
+
+        public async Task<IActionResult> import()
+        {
+            return Ok();
+            Workbook content = new Workbook();
+            content.CalculateAllValue();
+            content.LoadFromFile("./private/excel/template/TỔNG HỢP BARCODE.xlsx");
+            int numberofsheet = content.Worksheets.Count;
+            Console.WriteLine("Thông tin từ file Excel");
+            var sheet = content.Worksheets[0];
+
+            // đọc sheet này bắt đầu từ row 2 (0, 1 bỏ vì tiêu đề)
+
+            var lastrow = sheet.LastRow;
+            // nếu vẫn chưa gặp end thì vẫn lấy data
+            Console.WriteLine(lastrow);
+            for (int rowIndex = 4; rowIndex < lastrow; rowIndex++)
+            {
+                // lấy row hiện tại
+                var nowRow = sheet.Rows[rowIndex];
+                if (nowRow == null)
+                    continue;
+                // vì ta dùng 3 cột A, B, C => data của ta sẽ như sau
+                //int numcount = nowRow.Cells.Count;
+                //for(int y = 0;y<numcount - 1 ;y++)
+                var code = nowRow.Cells[1].Value;
+                var barcode = nowRow.Cells[4].Value;
+                if (code == "" || barcode == "")
+                {
+                    continue;
+                }
+                var explode = decimal.Parse(barcode);
+                var barcode1 = Math.Round(explode);
+                code = code.ToUpper();
+                // Xuất ra thông tin lên màn hình
+                Console.WriteLine("MS: {0} | barcode: {1} ", code, barcode1);
+                var product = _contexthh.ProductModel.Where(d => d.MAHH == code).FirstOrDefault();
+                if (product == null)
+                    continue;
+                product.mavach = barcode1.ToString();
+                _contexthh.Update(product);
+            }
+            _contexthh.SaveChanges();
+
+            return Ok("1");
         }
 
         // GET: Admin/Product/get

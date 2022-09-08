@@ -37,12 +37,26 @@ namespace it.Data
             {
                 var user_http = actionAccessor.ActionContext.HttpContext.User;
                 var user_id = UserManager.GetUserId(user_http);
-                var user = _context.UserModel.Where(d => d.Id == user_id).FirstOrDefault();
-                if (user != null)
+                if (user_id != null)
                 {
-                    var donvi = _context.DonviModel.Where(d => d.MACH == user.MACH).FirstOrDefault();
-                    //var MACH = "KT_QN";
-                    var connString = "data source=" + donvi.DIACHI + ";initial catalog=" + donvi.DULIEU + ";persist security info=True;user id=sa;password=" + donvi.PASS + ";MultipleActiveResultSets=True;";
+
+                    var user = _context.UserModel.Where(d => d.Id == user_id).FirstOrDefault();
+                    if (user != null)
+                    {
+                        var donvi = _context.DonviModel.Where(d => d.MACH == user.MACH).FirstOrDefault();
+                        //var MACH = "KT_QN";
+                        var connString = "data source=" + donvi.DIACHI + ";initial catalog=" + donvi.DULIEU + ";persist security info=True;user id=sa;password=" + donvi.PASS + ";MultipleActiveResultSets=True;";
+                        optionsBuilder.UseSqlServer(connString);
+                    }
+                    else
+                    {
+
+                    }
+                }
+                else
+                {
+                    var connString = "data source=172.16.1.4;initial catalog=PTTT;persist security info=True;user id=sa;password=PMP_IT123456;MultipleActiveResultSets=True;";
+                    //var connString = "data source=localhost;initial catalog=PTTT;persist security info=True;user id=sa;password=!PMP_it123456;MultipleActiveResultSets=True;";
                     optionsBuilder.UseSqlServer(connString);
                 }
             }

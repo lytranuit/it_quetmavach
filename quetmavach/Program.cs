@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.FileProviders;
 using System.Net;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'IdentityContextConnection' not found.");
@@ -27,6 +28,8 @@ builder.Services.AddDbContext<HhContext>(options =>
    );
 builder.Services.AddDbContext<KdContext>();
 builder.Services.AddDbContext<ChContext>();
+builder.Services.AddControllersWithViews().AddJsonOptions(x =>
+   x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 
 //builder.Services.AddAuthorization(options =>
 //{

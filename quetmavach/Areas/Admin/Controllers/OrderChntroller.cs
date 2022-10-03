@@ -27,7 +27,7 @@ namespace it.Areas.Admin.Controllers
         public async Task<JsonResult> Get(string sohd)
         {
             var HOADON_XUATModel = _contextCh.HOADON_XUATModel
-                .Where(d => d.SoHD == sohd)
+                .Where(d => d.SoHD == sohd || d.SOHD_DT == sohd)
                 .FirstOrDefault();
 
             if (HOADON_XUATModel == null)
@@ -36,7 +36,7 @@ namespace it.Areas.Admin.Controllers
             }
 
             HOADON_XUATModel.list_items = _contextCh.CT_HOADON_XUATModel
-            .Where(d => d.SoHD == sohd)
+            .Where(d => d.SoHD == HOADON_XUATModel.SoHD)
             .OrderBy(d => d.stt)
             .ToList();
 

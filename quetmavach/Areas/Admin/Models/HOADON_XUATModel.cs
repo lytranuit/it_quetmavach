@@ -6,7 +6,7 @@ namespace it.Areas.Admin.Models
 {
     public class HOADON_XUATModel
     {
-       [Required]
+        [Required]
         [Key]
 
         public string SoHD { get; set; }
@@ -19,6 +19,7 @@ namespace it.Areas.Admin.Models
 
         public string MaCH { get; set; }
 
+        public string? SOHD_DT { get; set; }
         public string? kihieu { get; set; }
         public decimal? TONGTIEN { get; set; }
         public decimal? thanhtien_hd { get; set; }

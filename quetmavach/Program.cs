@@ -26,6 +26,7 @@ builder.Services.AddDbContext<ItContext>(options =>
 builder.Services.AddDbContext<HhContext>(options =>
    options.UseSqlServer(hhString)
    );
+//builder.Services.AddDbContext<HhContext>();
 builder.Services.AddDbContext<KdContext>();
 builder.Services.AddDbContext<ChContext>();
 builder.Services.AddControllersWithViews().AddJsonOptions(x =>

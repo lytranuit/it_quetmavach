@@ -19,7 +19,6 @@ namespace it.Areas.Admin.Controllers
         // GET: Admin/Order
         public async Task<IActionResult> Index()
         {
-
             return View();
         }
         // GET: Admin/Order/get
@@ -27,7 +26,7 @@ namespace it.Areas.Admin.Controllers
         public async Task<JsonResult> Get(string sohd)
         {
             var HOADON_XUATModel = _contextKd.HOADON_XUATModel
-                .Where(d => d.SoHD == sohd || d.SOHD_DT == sohd)
+                .Where(d => d.SoHD == sohd || d.SoHD_DT == sohd)
                 .FirstOrDefault();
 
             if (HOADON_XUATModel == null)
@@ -41,7 +40,7 @@ namespace it.Areas.Admin.Controllers
             .ToList();
             foreach (var item in HOADON_XUATModel.list_items)
             {
-                item.product = _contextHh.ProductModel
+                item.product = _contextKd.ProductModel
                                 .Where(d => d.MAHH == item.MaHH).FirstOrDefault();
             }
 
@@ -51,7 +50,6 @@ namespace it.Areas.Admin.Controllers
         [HttpPost]
         public async Task<JsonResult> successkt(string sohd)
         {
-
             var CT_HOADON_XUAT = _contextKd.CT_HOADON_XUATModel
             .Where(d => d.SoHD == sohd)
             .ToList();

@@ -4,17 +4,24 @@ using System.Collections;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.SqlClient;
 using Spire.Xls;
+using Microsoft.AspNetCore.Identity;
+using it.Areas.Admin.Models;
 
 namespace it.Areas.Admin.Controllers
 {
     public class ProductController : BaseController
     {
         private string _type = "Product";
-        protected readonly HhContext _contexthh;
-        public ProductController(ItContext context, HhContext contexthh) : base(context)
+        protected readonly ChContext _contextCh;
+        protected readonly KdContext _contextKd;
+        private UserManager<UserModel> UserManager;
+        public ProductController(ItContext context, ChContext contextCh, KdContext contextKd, UserManager<UserModel> UserMgr) : base(context)
         {
-            _contexthh = contexthh;
+            _contextCh = contextCh;
+            _contextKd = contextKd;
+            UserManager = UserMgr;
             ViewData["controller"] = _type;
+
         }
 
         // GET: Admin/Product
@@ -29,16 +36,34 @@ namespace it.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(string MAHH, string mavach)
         {
-
+            System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+            var user = await UserManager.GetUserAsync(currentUser);
+            var MACH = user.MACH;
+            var donvi = _context.DonviModel.Where(d => d.MACH == MACH).FirstOrDefault();
+            var is_cuahang = false;
+            if (donvi != null && donvi.is_cuahang == true)
+                is_cuahang = true;
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var ProductModel_old = await _contexthh.ProductModel.FindAsync(MAHH);
-                    ProductModel_old.mavach = mavach;
-                    _contexthh.Update(ProductModel_old);
-                    await _contexthh.SaveChangesAsync();
-                    return Ok("1");
+                    if (is_cuahang)
+                    {
+
+                        var ProductModel_old = await _contextCh.ProductModel.FindAsync(MAHH);
+                        ProductModel_old.mavach = mavach;
+                        _contextCh.Update(ProductModel_old);
+                        await _contextCh.SaveChangesAsync();
+                        return Ok("1");
+                    }
+                    else
+                    {
+                        var ProductModel_old = await _contextKd.ProductModel.FindAsync(MAHH);
+                        ProductModel_old.mavach = mavach;
+                        _contextKd.Update(ProductModel_old);
+                        await _contextKd.SaveChangesAsync();
+                        return Ok("1");
+                    }
                 }
                 catch (DbUpdateException ex)
                 {
@@ -64,43 +89,89 @@ namespace it.Areas.Admin.Controllers
         [HttpPost]
         public async Task<JsonResult> Table()
         {
-            var draw = Request.Form["draw"].FirstOrDefault();
-            var start = Request.Form["start"].FirstOrDefault();
-            var length = Request.Form["length"].FirstOrDefault();
-            var searchValue = Request.Form["search[value]"].FirstOrDefault();
-            int pageSize = length != null ? Convert.ToInt32(length) : 0;
-            int skip = start != null ? Convert.ToInt32(start) : 0;
-            var customerData = (from tempcustomer in _contexthh.ProductModel select tempcustomer);
-            int recordsTotal = customerData.Count();
-            if (!string.IsNullOrEmpty(searchValue))
+            System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+            var user = await UserManager.GetUserAsync(currentUser);
+            var MACH = user.MACH;
+            var donvi = _context.DonviModel.Where(d => d.MACH == MACH).FirstOrDefault();
+            var is_cuahang = false;
+            if (donvi != null && donvi.is_cuahang == true)
+                is_cuahang = true;
+            if (is_cuahang)
             {
-                customerData = customerData.Where(m => m.TENHH.Contains(searchValue) || m.MAHH.Contains(searchValue));
-            }
-            int recordsFiltered = customerData.Count();
-            var datapost = customerData.Skip(skip).Take(pageSize).ToList();
-            var data = new ArrayList();
-            foreach (var record in datapost)
-            {
-                var soluong = record.SL3 != null && record.SL2 != null ? Math.Round((decimal)(record.SL3 / record.SL2)) : 0;
-                var DVT3 = record.DVT3;
-                var DVT2 = record.DVT2 != null && record.DVT2 != "" ? record.DVT2 : "Hộp";
-                var data1 = new
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                int pageSize = length != null ? Convert.ToInt32(length) : 0;
+                int skip = start != null ? Convert.ToInt32(start) : 0;
+                var customerData = (from tempcustomer in _contextCh.ProductModel select tempcustomer);
+                int recordsTotal = customerData.Count();
+                if (!string.IsNullOrEmpty(searchValue))
                 {
-                    action = "<div class='btn-group'></div>",
-                    id = "<a class='editmavach' href='#' data-mahh='" + record.MAHH + "' data-mavach='" + record.mavach + "'  data-toggle='modal' data-animation='bounce' data-target='.modal-mavach'><i class='fas fa-pencil-alt mr-2'></i> " + record.MAHH + "</a>",
-                    name = record.TENHH,
-                    soluong = soluong + " " + DVT3 + "/ " + DVT2,
-                    mavach = record.mavach
-                };
-                data.Add(data1);
+                    customerData = customerData.Where(m => m.TENHH.Contains(searchValue) || m.MAHH.Contains(searchValue));
+                }
+                int recordsFiltered = customerData.Count();
+                var datapost = customerData.Skip(skip).Take(pageSize).ToList();
+                var data = new ArrayList();
+                foreach (var record in datapost)
+                {
+                    var soluong = record.SL3 != null && record.SL2 != null && record.SL2 != 0 ? Math.Round((decimal)(record.SL3 / record.SL2)) : 0;
+                    var DVT3 = record.DVT3;
+                    var DVT2 = record.DVT2 != null && record.DVT2 != "" ? record.DVT2 : "Hộp";
+                    var data1 = new
+                    {
+                        action = "<div class='btn-group'></div>",
+                        id = "<a class='editmavach' href='#' data-mahh='" + record.MAHH + "' data-mavach='" + record.mavach + "'  data-toggle='modal' data-animation='bounce' data-target='.modal-mavach'><i class='fas fa-pencil-alt mr-2'></i> " + record.MAHH + "</a>",
+                        name = record.TENHH,
+                        soluong = soluong + " " + DVT3 + "/ " + DVT2,
+                        mavach = record.mavach
+                    };
+                    data.Add(data1);
+                }
+                var jsonData = new { draw = draw, recordsFiltered = recordsFiltered, recordsTotal = recordsTotal, data = data };
+                return Json(jsonData);
             }
-            var jsonData = new { draw = draw, recordsFiltered = recordsFiltered, recordsTotal = recordsTotal, data = data };
-            return Json(jsonData);
+            else
+            {
+                var draw = Request.Form["draw"].FirstOrDefault();
+                var start = Request.Form["start"].FirstOrDefault();
+                var length = Request.Form["length"].FirstOrDefault();
+                var searchValue = Request.Form["search[value]"].FirstOrDefault();
+                int pageSize = length != null ? Convert.ToInt32(length) : 0;
+                int skip = start != null ? Convert.ToInt32(start) : 0;
+                var customerData = (from tempcustomer in _contextKd.ProductModel select tempcustomer);
+                int recordsTotal = customerData.Count();
+                if (!string.IsNullOrEmpty(searchValue))
+                {
+                    customerData = customerData.Where(m => m.TENHH.Contains(searchValue) || m.MAHH.Contains(searchValue));
+                }
+                int recordsFiltered = customerData.Count();
+                var datapost = customerData.Skip(skip).Take(pageSize).ToList();
+                var data = new ArrayList();
+                foreach (var record in datapost)
+                {
+                    var soluong = record.SL3 != null && record.SL2 != null ? Math.Round((decimal)(record.SL3 / record.SL2)) : 0;
+                    var DVT3 = record.DVT3;
+                    var DVT2 = record.DVT2 != null && record.DVT2 != "" ? record.DVT2 : "Hộp";
+                    var data1 = new
+                    {
+                        action = "<div class='btn-group'></div>",
+                        id = "<a class='editmavach' href='#' data-mahh='" + record.MAHH + "' data-mavach='" + record.mavach + "'  data-toggle='modal' data-animation='bounce' data-target='.modal-mavach'><i class='fas fa-pencil-alt mr-2'></i> " + record.MAHH + "</a>",
+                        name = record.TENHH,
+                        soluong = soluong + " " + DVT3 + "/ " + DVT2,
+                        mavach = record.mavach
+                    };
+                    data.Add(data1);
+                }
+                var jsonData = new { draw = draw, recordsFiltered = recordsFiltered, recordsTotal = recordsTotal, data = data };
+                return Json(jsonData);
+            }
+
         }
 
         public async Task<IActionResult> import()
         {
-            return Ok();
+            //return Ok();
             Workbook content = new Workbook();
             content.CalculateAllValue();
             content.LoadFromFile("./private/excel/template/TỔNG HỢP BARCODE.xlsx");
@@ -113,6 +184,13 @@ namespace it.Areas.Admin.Controllers
             var lastrow = sheet.LastRow;
             // nếu vẫn chưa gặp end thì vẫn lấy data
             Console.WriteLine(lastrow);
+            System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+            var user = await UserManager.GetUserAsync(currentUser);
+            var MACH = user.MACH;
+            var donvi = _context.DonviModel.Where(d => d.MACH == MACH).FirstOrDefault();
+            var is_cuahang = false;
+            if (donvi != null && donvi.is_cuahang == true)
+                is_cuahang = true;
             for (int rowIndex = 4; rowIndex < lastrow; rowIndex++)
             {
                 // lấy row hiện tại
@@ -133,14 +211,33 @@ namespace it.Areas.Admin.Controllers
                 code = code.ToUpper();
                 // Xuất ra thông tin lên màn hình
                 Console.WriteLine("MS: {0} | barcode: {1} ", code, barcode1);
-                var product = _contexthh.ProductModel.Where(d => d.MAHH == code).FirstOrDefault();
-                if (product == null)
-                    continue;
-                product.mavach = barcode1.ToString();
-                _contexthh.Update(product);
-            }
-            _contexthh.SaveChanges();
+                if (is_cuahang)
+                {
 
+                    var product = _contextCh.ProductModel.Where(d => d.MAHH == code).FirstOrDefault();
+                    if (product == null)
+                        continue;
+                    product.mavach = barcode1.ToString();
+                    _contextCh.Update(product);
+                }
+                else
+                {
+
+                    var product = _contextKd.ProductModel.Where(d => d.MAHH == code).FirstOrDefault();
+                    if (product == null)
+                        continue;
+                    product.mavach = barcode1.ToString();
+                    _contextKd.Update(product);
+                }
+            }
+            if (is_cuahang)
+            {
+                _contextCh.SaveChanges();
+            }
+            else
+            {
+                _contextKd.SaveChanges();
+            }
             return Ok("1");
         }
 
@@ -148,15 +245,38 @@ namespace it.Areas.Admin.Controllers
 
         public async Task<JsonResult> Get(string mavach)
         {
-            var ProductModel = _contexthh.ProductModel
+            System.Security.Claims.ClaimsPrincipal currentUser = this.User;
+            var user = await UserManager.GetUserAsync(currentUser);
+            var MACH = user.MACH;
+            var donvi = _context.DonviModel.Where(d => d.MACH == MACH).FirstOrDefault();
+            var is_cuahang = false;
+            if (donvi != null && donvi.is_cuahang == true)
+                is_cuahang = true;
+            if (is_cuahang == true)
+            {
+                var ProductModel = _contextCh.ProductModel
+                                .Where(d => d.mavach == mavach)
+                                .FirstOrDefault();
+
+                if (ProductModel == null)
+                {
+                    return Json(new { success = 0, message = "Không tìm thấy sản phẩm" });
+                }
+                return Json(new { success = 1, item = ProductModel });
+            }
+            else
+            {
+                var ProductModel = _contextKd.ProductModel
                 .Where(d => d.mavach == mavach)
                 .FirstOrDefault();
 
-            if (ProductModel == null)
-            {
-                return Json(new { success = 0, message = "Không tìm thấy sản phẩm" });
+                if (ProductModel == null)
+                {
+                    return Json(new { success = 0, message = "Không tìm thấy sản phẩm" });
+                }
+                return Json(new { success = 1, item = ProductModel });
             }
-            return Json(new { success = 1, item = ProductModel });
+
         }
     }
 }

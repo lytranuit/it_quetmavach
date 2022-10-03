@@ -27,7 +27,7 @@ namespace it.Areas.Admin.Controllers
         public async Task<JsonResult> Get(string sohd)
         {
             var HOADON_XUATModel = _contextCh.HOADON_XUATModel
-                .Where(d => d.SoHD == sohd || d.SOHD_DT == sohd)
+                .Where(d => d.SoHD == sohd || d.SoHD_DT == sohd)
                 .FirstOrDefault();
 
             if (HOADON_XUATModel == null)
@@ -42,7 +42,7 @@ namespace it.Areas.Admin.Controllers
 
             foreach (var item in HOADON_XUATModel.list_items)
             {
-                item.product = _contextHh.ProductModel
+                item.productCh = _contextCh.ProductModel
                                 .Where(d => d.MAHH == item.MaHH).FirstOrDefault();
             }
 

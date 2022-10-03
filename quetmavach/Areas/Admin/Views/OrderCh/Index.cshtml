@@ -19,26 +19,31 @@
                 <div class="row mt-2">
                     <div class="col-4">
 
-                        <b>Số hóa đơn:</b>
-                        <span class="sohd"></span>
+                        <span>Số hóa đơn:</span>
+                        <b class="sohd"></b>
+                    </div>
+
+                    <div class="col-4">
+                        <span>Số hóa đơn điện tử:</span>
+                        <b class="sohd_dt"></b>
                     </div>
                     <div class="col-4">
-                        <b>Kí hiệu:</b>
-                        <span class="kihieu"></span>
+                        <span>Kí hiệu:</span>
+                        <b class="kihieu"></b>
                     </div>
                 </div>
-                  <div class="row mt-2">
+                <div class="row mt-2">
                     <div class="col-4">
-                        <b>Đơn vị mua hàng:</b>
-                        <span class="donvi"></span>
+                        <span>Đơn vị mua hàng:</span>
+                        <b class="donvi"></b>
                     </div>
                     <div class="col-4">
-                        <b>Địa chỉ:</b>
-                        <span class="diachi"></span>
-                    </div> 
+                        <span>Địa chỉ:</span>
+                        <b class="diachi"></b>
+                    </div>
                     <div class="col-4">
-                        <b>Ngày giao hàng:</b>
-                        <span class="ngaygiaohang"></span>
+                        <span>Ngày giao hàng:</span>
+                        <b class="ngaygiaohang"></b>
                     </div>
                 </div>
                 <div class="row mt-2">
@@ -86,9 +91,24 @@
 <template class="chitiet_template">
     <tr data-id={{maHH}}>
         <td>{{maHH}}</td>
-        <td>{{tenHH}}</td>
+        <td>
+            {{tenHH}}
+            <div>
+                <span class="mr-1">
+                    <span class="mr-1">Số Lô:</span><b>{{maLo}}</b>
+                </span>
+                <span>
+                    <span class="mr-1">Hạn dùng:</span><b>{{hanDung}}</b>
+                </span>
+            </div>
+        </td>
         <td>{{soLuong}}</td>
-        <td>{{dvt}}</td>
+        <td>
+            {{dvt}}
+            <div>
+                {{dvtNote}}
+            </div>
+        </td>
         <td>{{donGia}}</td>
         <td>{{thanhTien}}</td>>
         <td style='width: 250px;'>
@@ -183,6 +203,7 @@
                     if(data.success){
                         $(".hoadon-check").removeClass("d-none");
                         $(".sohd").text(data.item.soHD);
+                        $(".sohd_dt").text(data.item.soHD_DT);
                         $(".kihieu").text(data.item.kihieu);
                         $(".ngaygiaohang").text(moment(data.item.ngaygiaohang).format("DD/MM/YYYY"));
                         $(".donvi").text(data.item.donvi);
@@ -209,7 +230,7 @@
                 return;
             var mavach = $("#mavach").val();
             $("#mavach").val('');
-            var product_item = data_hoadon.list_items.find(element => element.product.mavach == mavach);
+            var product_item = data_hoadon.list_items.find(element => element.productCh.mavach == mavach);
             //console.log(product_item)
             if(!product_item){
                 alert("Không có sản phẩm này trong hóa đơn");
@@ -220,7 +241,7 @@
             var input = $(".input-soluong input",tr);
             var min = 0;
             var max = product_item.soLuong;
-            var product = product_item.product;
+            var product = product_item.productCh;
             var dvthop = product.sL3 && product.sL2 ? Math.round(product.sL3 / product.sL2) : 0;
             var cur_val = 0;
             if(!input.length){
@@ -278,15 +299,28 @@
             item.soLuong = number_format(item.soLuong,0,",",".");
             item.donGia = number_format(item.donGia,0,",",".") + " VND";
             item.thanhTien = number_format(item.thanhTien,0,",",".") + " VND";
+
+            var thung = Math.floor(item.soLuong / (item.productCh.sL1 * item.productCh.sL3));
+            var thung_du = item.soLuong % (item.productCh.sL1 * item.productCh.sL3);
+            var hop = thung_du * item.productCh.sL2 / item.productCh.sL3;
+            //console.log(thung);
+            //console.log(thung_du);
+            //console.log(hop);
+            item.dvtNote = "";
+            if(thung > 0)
+                item.dvtNote += thung + " " + item.productCh.dvT1;
+            if(hop > 0)
+                item.dvtNote += hop + " " + item.productCh.dvT2;
+
             var template = $(".chitiet_template").html();
             var rendered = Mustache.render(template, item);
             $("#chitietdonhang").append(rendered);
 
-            $("tr[data-id='"+item.maHH+"'] .range_01").ionRangeSlider({
-                skin: "modern",
-                min: 0,
-                max:item.soLuong
-            });
+            //$("tr[data-id='"+item.maHH+"'] .range_01").ionRangeSlider({
+            //    skin: "modern",
+            //    min: 0,
+            //    max:item.soLuong
+            //});
             $("tr[data-id='"+item.maHH+"']").data("item",item);
         }
 

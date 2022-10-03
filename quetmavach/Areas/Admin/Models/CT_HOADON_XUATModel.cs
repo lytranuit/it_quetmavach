@@ -26,11 +26,16 @@ namespace it.Areas.Admin.Models
 
         public double? TyLeCK { get; set; }
 
+        public string? MaLo { get; set; }
+        public string? HanDung { get; set; }
+
         [ForeignKey("SoHD")]
         public virtual HOADON_XUATModel? HOADON_XUAT { get; set; }
 
         [NotMapped]
         public ProductModel product { get; set; }
+        [NotMapped]
+        public ProductChModel productCh { get; set; }
 
     }
 }

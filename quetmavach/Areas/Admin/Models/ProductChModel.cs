@@ -2,8 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 namespace it.Areas.Admin.Models
 {
-
-    public class ProductModel
+    public class ProductChModel
     {
         [Required]
         [Key]
@@ -16,8 +15,8 @@ namespace it.Areas.Admin.Models
         public string? DVT3 { get; set; }
         public string? DVT2 { get; set; }
         public string? DVT1 { get; set; }
-        public decimal? SL3 { get; set; }
-        public decimal? SL2 { get; set; }
-        public decimal? SL1 { get; set; }
+        public int? SL3 { get; set; }
+        public int? SL2 { get; set; }
+        public int? SL1 { get; set; }
     }
 }

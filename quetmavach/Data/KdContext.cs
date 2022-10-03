@@ -20,9 +20,12 @@ namespace it.Data
 
         public DbSet<CT_HOADON_XUATModel> CT_HOADON_XUATModel { get; set; }
         public DbSet<HOADON_XUATModel> HOADON_XUATModel { get; set; }
+        public DbSet<ProductModel> ProductModel { get; set; }
+
         //public DbSet<User2Model> User2Model { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<ProductModel>().ToTable("TBL_DANHMUCHANGHOA");
             modelBuilder.Entity<HOADON_XUATModel>().ToTable("DTA_HOADON_XUAT");
             modelBuilder.Entity<CT_HOADON_XUATModel>().ToTable("DTA_CT_HOADON_XUAT").HasKey(table => new
             {
